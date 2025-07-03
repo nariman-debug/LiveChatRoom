@@ -1,0 +1,23 @@
+<input id="input" type="text" placeholder="Type message">
+<button onclick="sendMessage()">Send</button>
+<ul id="messages"></ul>
+
+<script>
+    const socket = new WebSocket('ws://127.0.0.1:8001/ws/chat/');
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const messageList = document.getElementById('messages');
+        const li = document.createElement('li');
+        li.innerText = data.message;
+        messageList.appendChild(li);
+    };
+
+    function sendMessage() {
+        const input = document.getElementById('input');
+        const message = input.value;
+        socket.send(JSON.stringify({'message': message}));
+        input.value = '';
+    }
+</script>
+
