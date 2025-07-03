@@ -1,3 +1,5 @@
+{% load static %}
+<link type="text/css" rel="stylesheet" href="{% static 'css/chat_room.css' %}">
 <input id="input" type="text" placeholder="Type message">
 <button onclick="sendMessage()">Send</button>
 <ul id="messages"></ul>
