@@ -3,9 +3,15 @@
 <ul id="messages"></ul>
 
 <script>
-    const socket = new WebSocket('ws://127.0.0.1:8001/ws/chat/');
+    {#const socket = new WebSocket('ws://127.0.0.1:8001/ws/chat/');#}
+    let loc = window.location;
+    let wsStart = (loc.protocol === "https:") ? "wss://" : "ws://";
+    let endpoint = wsStart + loc.host + "/ws/chat/";
+    let socket2 = new WebSocket(endpoint);
+    {#console.log(`socket: ${socket.url}`)#}
+    console.log(`socket2: ${socket2.url}`)
 
-    socket.onmessage = function(e) {
+    socket2.onmessage = function(e) {
         const data = JSON.parse(e.data);
         const messageList = document.getElementById('messages');
         const li = document.createElement('li');
@@ -16,7 +22,7 @@
     function sendMessage() {
         const input = document.getElementById('input');
         const message = input.value;
-        socket.send(JSON.stringify({'message': message}));
+        socket2.send(JSON.stringify({'message': message}));
         input.value = '';
     }
 </script>
