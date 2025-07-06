@@ -1288,7 +1288,7 @@
             currentUserAvatar.style.backgroundColor = color;
             
             // Add previous messages
-            data.messages.forEach(msg => {
+            data.messages.reverse().forEach(msg => {
                 addMessage(msg);
             });
             
@@ -1349,7 +1349,7 @@
                         <span class="message-user">${data.user}</span>
                         <span class="message-time">${timeString}</span>
                     </div>
-                    <div class="message-text">${data.content}</div>
+                    <div class="message-text">${data.content ? data.content : data.message}</div>
                 </div>
             `;
             
