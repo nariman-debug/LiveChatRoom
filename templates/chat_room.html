@@ -3,235 +3,1043 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اتاق گفتگو</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <title>چت روم مدرن | Modern Chat</title>
     <style>
+        /* Reset and Base Styles */
         :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3f37c9;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --success-color: #4cc9f0;
-            --gray-color: #6c757d;
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --primary-dark: #3f37c9;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --dark-gray: #495057;
+            --message-sent: #4361ee;
+            --message-received: #3a0ca3;
+            --online: #4cc9f0;
+            --offline: #6c757d;
+            --chat-bg: #e5ddd5;
+            --header-bg: #4361ee;
+            --sidebar-bg: #ffffff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --border-radius: 12px;
         }
-        
+
+        [data-theme="dark"] {
+            --primary: #5e72e4;
+            --primary-light: #6a8eff;
+            --primary-dark: #4d5fd0;
+            --secondary: #4a3fdb;
+            --light: #1a202c;
+            --dark: #f8f9fa;
+            --gray: #a0aec0;
+            --light-gray: #2d3748;
+            --dark-gray: #4a5568;
+            --message-sent: #2d3748;
+            --message-received: #4a5568;
+            --chat-bg: #1a202c;
+            --header-bg: #1a202c;
+            --sidebar-bg: #2d3748;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: 'Vazir';
+            src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/Vazir.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+
         body {
             font-family: 'Vazir', sans-serif;
-            background-color: #f0f2f5;
+            background-color: var(--light);
+            color: var(--dark);
             height: 100vh;
             overflow: hidden;
+            transition: var(--transition);
+            line-height: 1.6;
         }
-        
-        .chat-container {
+
+        /* Background Animation */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--primary-light), transparent);
+            opacity: 0.1;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .bg-circle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: -50px;
+            left: -50px;
+            animation-delay: 0s;
+        }
+
+        .bg-circle:nth-child(2) {
+            width: 500px;
+            height: 500px;
+            bottom: -150px;
+            right: -100px;
+            animation-delay: 3s;
+        }
+
+        .bg-circle:nth-child(3) {
+            width: 400px;
+            height: 400px;
+            bottom: 50%;
+            right: 30%;
+            animation-delay: 6s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(20px, 20px) rotate(5deg);
+            }
+            50% {
+                transform: translate(-20px, 20px) rotate(-5deg);
+            }
+            75% {
+                transform: translate(20px, -20px) rotate(5deg);
+            }
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
             height: 100vh;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
         }
-        
-        .users-panel {
-            background-color: white;
-            border-right: 1px solid #e9ecef;
-            overflow-y: auto;
-        }
-        
-        .chat-panel {
+
+        .sidebar {
+            width: 300px;
+            background-color: var(--sidebar-bg);
+            border-left: 1px solid rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
-            height: 100%;
+            transition: var(--transition);
+            transform: translateX(0);
+            box-shadow: var(--shadow);
+            z-index: 10;
         }
-        
-        .chat-header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .messages-container {
+
+        .chat-area {
             flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            background-color: #e5ddd5;
-            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAQklEQVRoQ+3SMQ0AAAgEoJNc7B9i0A0M2CqViqIoiqIoiqIoiqIoiqIoiqIoiqIoiqIoiqIoiqIoiqIoiqIoiqL4VQ8xcAESFqJ9iwAAAABJRU5ErkJggg==');
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+            position: relative;
         }
-        
-        .message-input {
-            background-color: white;
-            padding: 1rem;
-            border-top: 1px solid #e9ecef;
+
+        /* Header */
+        .chat-header {
+            background-color: var(--header-bg);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+            position: relative;
         }
-        
-        .message {
-            max-width: 75%;
-            margin-bottom: 1rem;
-            clear: both;
+
+        .chat-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        
-        .received {
-            float: right;
-            background-color: white;
-            border-radius: 15px 15px 0 15px;
-        }
-        
-        .sent {
-            float: left;
-            background-color: #dcf8c6;
-            border-radius: 15px 15px 15px 0;
-        }
-        
-        .user-item {
-            transition: all 0.3s;
-            border-bottom: 1px solid #f0f2f5;
-        }
-        
-        .user-item:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .online-badge {
+
+        .chat-title::before {
+            content: '';
+            display: inline-block;
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            display: inline-block;
-            background-color: #28a745;
+            background-color: var(--online);
+            animation: pulse 2s infinite;
         }
-        
-        .auth-modal .modal-content {
-            border-radius: 15px;
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .header-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .header-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        .header-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Messages */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background-color: var(--chat-bg);
+            background-image: 
+                linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+
+        .message {
+            max-width: 75%;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: messageIn 0.4s forwards;
+            transition: var(--transition);
+        }
+
+        @keyframes messageIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .received {
+            align-self: flex-start;
+            animation-delay: 0.1s;
+        }
+
+        .sent {
+            align-self: flex-end;
+            animation-delay: 0.2s;
+        }
+
+        .message-content {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .received .message-content {
+            background-color: var(--message-received);
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+
+        .sent .message-content {
+            background-color: var(--message-sent);
+            color: white;
+            border-bottom-left-radius: 0;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+
+        .message-user {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .message-text {
+            line-height: 1.5;
+        }
+
+        /* Input area */
+        .message-input-area {
+            padding: 1rem;
+            background-color: var(--sidebar-bg);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .message-input {
+            flex: 1;
+            border-radius: var(--border-radius);
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--light-gray);
+            background-color: var(--light);
+            color: var(--dark);
+            transition: var(--transition);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            height: 48px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn-send {
+            border-radius: var(--border-radius);
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .btn-send:hover {
+            background-color: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        .btn-send svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Users sidebar */
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .current-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            background-color: rgba(67, 97, 238, 0.1);
+            transition: var(--transition);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .user-info {
+            flex: 1;
             overflow: hidden;
         }
-        
+
+        .user-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-status {
+            font-size: 0.8rem;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .online {
+            background-color: var(--online);
+            box-shadow: 0 0 0 2px rgba(76, 201, 240, 0.3);
+        }
+
+        .offline {
+            background-color: var(--offline);
+        }
+
+        .users-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 0.25rem;
+        }
+
+        .user-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .user-item.active {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+
+        /* Auth modal */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .auth-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--sidebar-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        .auth-modal.active .auth-card {
+            transform: translateY(0);
+            opacity: 1;
+            transition-delay: 0.1s;
+        }
+
         .auth-header {
-            background-color: var(--primary-color);
+            background-color: var(--primary);
             color: white;
             text-align: center;
-            padding: 1.5rem;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .auth-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .auth-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .auth-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .auth-body {
+            padding: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--light-gray);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-family: inherit;
+            font-weight: 600;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
         .tab-content {
-            padding: 1.5rem;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--light-gray);
+            border-radius: var(--border-radius);
+            background-color: var(--light);
+            color: var(--dark);
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn-auth {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            border: none;
+            background-color: var(--primary);
+            color: white;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+        }
+
+        .btn-auth:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-auth.secondary {
+            background-color: var(--light-gray);
+            color: var(--dark);
+        }
+
+        .btn-auth.secondary:hover {
+            background-color: var(--gray);
+            color: white;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .alert-danger {
+            background-color: rgba(247, 37, 133, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(247, 37, 133, 0.2);
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            background-color: var(--primary);
+            color: white;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-icon {
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-message {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .close-notification {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+            padding: 0.25rem;
+            margin-right: -0.5rem;
+        }
+
+        .close-notification:hover {
+            opacity: 1;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem 1rem;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            align-self: flex-start;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .typing-indicator.active {
+            opacity: 1;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--gray);
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                transform: translateX(100%);
+                width: 280px;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .auth-card {
+                max-width: 90%;
+            }
+        }
+
+        /* Custom scrollbar */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: var(--primary);
+            border-radius: 3px;
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translateX(-1px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
         }
     </style>
 </head>
 <body>
-    <!-- Authentication Modal -->
-    <div class="modal fade auth-modal" id="authModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="auth-header">
-                    <h5 class="modal-title">به اتاق گفتگو خوش آمدید</h5>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="bg-circle"></div>
+        <div class="bg-circle"></div>
+        <div class="bg-circle"></div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="auth-modal active" id="authModal">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2 class="auth-title">چت روم مدرن</h2>
+                <p class="auth-subtitle">به جامعه گفتگوی ما بپیوندید</p>
+            </div>
+            <div class="auth-body">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="login">ورود</button>
+                    <button class="tab-btn" data-tab="signup">ثبت نام</button>
                 </div>
-                <div class="modal-body">
-                    <ul class="nav nav-tabs nav-fill mb-3" id="authTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">ورود</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup" type="button" role="tab">ثبت نام</button>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content" id="authTabsContent">
-                        <div class="tab-pane fade show active" id="login" role="tabpanel">
-                            <div class="mb-3">
-                                <label for="loginUsername" class="form-label">نام کاربری</label>
-                                <input type="text" class="form-control" id="loginUsername" placeholder="نام کاربری خود را وارد کنید">
-                            </div>
-                            <div class="mb-3">
-                                <label for="loginPassword" class="form-label">رمز عبور</label>
-                                <input type="password" class="form-control" id="loginPassword" placeholder="رمز عبور خود را وارد کنید">
-                            </div>
-                            <button id="loginBtn" class="btn btn-primary w-100">ورود به سیستم</button>
-                        </div>
-                        
-                        <div class="tab-pane fade" id="signup" role="tabpanel">
-                            <div class="mb-3">
-                                <label for="signupUsername" class="form-label">نام کاربری</label>
-                                <input type="text" class="form-control" id="signupUsername" placeholder="یک نام کاربری انتخاب کنید">
-                            </div>
-                            <div class="mb-3">
-                                <label for="signupPassword" class="form-label">رمز عبور</label>
-                                <input type="password" class="form-control" id="signupPassword" placeholder="رمز عبور خود را وارد کنید">
-                            </div>
-                            <div class="mb-3">
-                                <label for="signupConfirm" class="form-label">تکرار رمز عبور</label>
-                                <input type="password" class="form-control" id="signupConfirm" placeholder="رمز عبور را تکرار کنید">
-                            </div>
-                            <button id="signupBtn" class="btn btn-success w-100">ثبت نام</button>
-                        </div>
+                
+                <div class="tab-content active" id="loginTab">
+                    <div class="form-group">
+                        <label for="loginUsername" class="form-label">نام کاربری</label>
+                        <input type="text" class="form-control" id="loginUsername" placeholder="نام کاربری خود را وارد کنید">
                     </div>
+                    <div class="form-group">
+                        <label for="loginPassword" class="form-label">رمز عبور</label>
+                        <input type="password" class="form-control" id="loginPassword" placeholder="رمز عبور خود را وارد کنید">
+                    </div>
+                    <button id="loginBtn" class="btn-auth">ورود به سیستم</button>
+                </div>
+                
+                <div class="tab-content" id="signupTab">
+                    <div class="form-group">
+                        <label for="signupUsername" class="form-label">نام کاربری</label>
+                        <input type="text" class="form-control" id="signupUsername" placeholder="یک نام کاربری انتخاب کنید">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword" class="form-label">رمز عبور</label>
+                        <input type="password" class="form-control" id="signupPassword" placeholder="رمز عبور خود را وارد کنید">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupConfirm" class="form-label">تکرار رمز عبور</label>
+                        <input type="password" class="form-control" id="signupConfirm" placeholder="رمز عبور را تکرار کنید">
+                    </div>
+                    <button id="signupBtn" class="btn-auth">ثبت نام</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Chat Interface -->
-    <div class="container-fluid h-100 d-none" id="chatInterface">
-        <div class="row h-100">
-            <!-- Users Panel -->
-            <div class="col-md-3 col-lg-2 p-0 users-panel">
-                <div class="d-flex flex-column h-100">
-                    <div class="p-3 border-bottom">
-                        <h5 class="mb-0">کاربران آنلاین</h5>
-                    </div>
-                    <div class="flex-grow-1 overflow-auto">
-                        <ul class="list-group list-group-flush" id="usersList">
-                            <!-- Users will be dynamically added here -->
-                        </ul>
-                    </div>
-                    <div class="p-3 border-top">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <strong id="currentUsername"></strong>
-                                <div class="text-success small">
-                                    <span class="online-badge"></span> آنلاین
-                                </div>
-                            </div>
-                            <button id="logoutBtn" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-box-arrow-left"></i>
-                            </button>
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <div class="notification-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">پیام جدید</div>
+            <div class="notification-message" id="notificationMessage"></div>
+        </div>
+        <button class="close-notification" id="closeNotification">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container hidden" id="appContainer">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    کاربران آنلاین
+                </h3>
+                <div class="current-user">
+                    <div class="user-avatar" id="currentUserAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="currentUsername"></div>
+                        <div class="user-status">
+                            <span class="status-indicator online"></span>
+                            <span>آنلاین</span>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="users-list custom-scrollbar" id="usersList">
+                <!-- Users will be added here dynamically -->
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="chat-title">
+                    <button id="toggleSidebar" class="header-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    چت عمومی
+                    <span class="badge" id="onlineCount">0</span>
+                </div>
+                <div class="header-actions">
+                    <button id="themeToggle" class="header-btn" title="تغییر تم">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                    </button>
+                    <button id="logoutBtn" class="header-btn" title="خروج">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"></path>
+                            <polyline points="17 16 21 12 17 8"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </button>
                 </div>
             </div>
             
-            <!-- Chat Panel -->
-            <div class="col-md-9 col-lg-10 p-0">
-                <div class="d-flex flex-column h-100 chat-panel">
-                    <!-- Chat Header -->
-                    <div class="chat-header d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h4 class="mb-0">اتاق گفتگوی عمومی</h4>
-                        </div>
-                        <div>
-                            <span id="onlineCount">0</span> کاربر آنلاین
-                        </div>
-                    </div>
-                    
-                    <!-- Messages Container -->
-                    <div class="messages-container" id="messagesContainer" style="max-height: 500px">
-                        <!-- Messages will be dynamically added here -->
-                    </div>
-                    
-                    <!-- Message Input -->
-                    <div class="message-input">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="messageInput" placeholder="پیام خود را بنویسید..." disabled>
-                            <button class="btn btn-primary" id="sendBtn" disabled>
-                                <i class="bi bi-send"></i> ارسال
-                            </button>
-                        </div>
-                    </div>
+            <!-- Messages Container -->
+            <div class="messages-container custom-scrollbar" id="messagesContainer">
+                <!-- Typing Indicator -->
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+                
+                <!-- Messages will be added here dynamically -->
+            </div>
+            
+            <!-- Message Input -->
+            <div class="message-input-area">
+                <div class="input-group">
+                    <textarea class="message-input" id="messageInput" placeholder="پیام خود را بنویسید..." rows="1" disabled></textarea>
+                    <button class="btn-send" id="sendBtn" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Initialize Bootstrap Modal
-        const authModal = new bootstrap.Modal(document.getElementById('authModal'), {backdrop: 'static'});
-        authModal.show();
+        // DOM Elements
+        const authModal = document.getElementById('authModal');
+        const authCard = document.querySelector('.auth-card');
+        const loginTab = document.getElementById('loginTab');
+        const signupTab = document.getElementById('signupTab');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const loginUsername = document.getElementById('loginUsername');
+        const loginPassword = document.getElementById('loginPassword');
+        const signupUsername = document.getElementById('signupUsername');
+        const signupPassword = document.getElementById('signupPassword');
+        const signupConfirm = document.getElementById('signupConfirm');
+        
+        const appContainer = document.getElementById('appContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const usersList = document.getElementById('usersList');
+        const currentUsernameEl = document.getElementById('currentUsername');
+        const currentUserAvatar = document.getElementById('currentUserAvatar');
+        const onlineCountEl = document.getElementById('onlineCount');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const toggleSidebar = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const themeToggle = document.getElementById('themeToggle');
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const closeNotification = document.getElementById('closeNotification');
+        const typingIndicator = document.getElementById('typingIndicator');
         
         // WebSocket Connection
         let loc = window.location;
@@ -239,31 +1047,193 @@
         let endpoint = wsStart + loc.host + "/ws/chat/";
         let socket = new WebSocket(endpoint);
         let currentUser = null;
+        let isDarkMode = false;
+        let notificationTimeout;
+        let typingTimeout;
+        let isTyping = false;
         
-        // DOM Elements
-        const loginBtn = document.getElementById('loginBtn');
-        const signupBtn = document.getElementById('signupBtn');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const usersList = document.getElementById('usersList');
-        const currentUsernameEl = document.getElementById('currentUsername');
-        const onlineCountEl = document.getElementById('onlineCount');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const chatInterface = document.getElementById('chatInterface');
+        // Tab switching
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
+            });
+        });
         
-        // Event Listeners
+        // Auth handlers
         loginBtn.addEventListener('click', handleLogin);
         signupBtn.addEventListener('click', handleSignup);
+        
+        function handleLogin() {
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value.trim();
+            
+            if (!username || !password) {
+                showAuthError('لطفاً نام کاربری و رمز عبور را وارد کنید');
+                return;
+            }
+            
+            socket.send(JSON.stringify({
+                action: 'login',
+                username: username,
+                password: password
+            }));
+        }
+        
+        function handleSignup() {
+            const username = signupUsername.value.trim();
+            const password = signupPassword.value.trim();
+            const confirm = signupConfirm.value.trim();
+            
+            if (!username || !password) {
+                showAuthError('لطفاً نام کاربری و رمز عبور را وارد کنید');
+                return;
+            }
+            
+            if (password !== confirm) {
+                showAuthError('رمز عبور و تکرار آن مطابقت ندارند');
+                return;
+            }
+            
+            socket.send(JSON.stringify({
+                action: 'signup',
+                username: username,
+                password: password
+            }));
+        }
+        
+        function showAuthError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12" y2="16"></line>
+                </svg>
+                ${message}
+            `;
+            
+            const activeTab = document.querySelector('.tab-content.active');
+            const existingAlert = activeTab.querySelector('.alert');
+            
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            activeTab.prepend(alertDiv);
+        }
+        
+        // Chat handlers
         sendBtn.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
         });
+        
+        messageInput.addEventListener('input', function() {
+            // Auto-resize textarea
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            
+            // Typing indicator
+            if (!isTyping && this.value.trim().length > 0) {
+                isTyping = true;
+                socket.send(JSON.stringify({
+                    action: 'typing',
+                    typing: true
+                }));
+            }
+            
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                if (isTyping) {
+                    isTyping = false;
+                    socket.send(JSON.stringify({
+                        action: 'typing',
+                        typing: false
+                    }));
+                }
+            }, 1000);
+        });
+        
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !currentUser) return;
+            
+            socket.send(JSON.stringify({
+                action: 'message',
+                message: message
+            }));
+            
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            messageInput.focus();
+            
+            if (isTyping) {
+                isTyping = false;
+                socket.send(JSON.stringify({
+                    action: 'typing',
+                    typing: false
+                }));
+            }
+        }
+        
+        // UI handlers
+        toggleSidebar.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+        
+        themeToggle.addEventListener('click', toggleTheme);
+        
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+            
+            // Save preference to localStorage
+            localStorage.setItem('darkMode', isDarkMode);
+            
+            // Update icon
+            themeToggle.innerHTML = isDarkMode ? 
+                `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>` :
+                `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>`;
+        }
+        
+        closeNotification.addEventListener('click', () => {
+            notification.classList.remove('show');
+        });
+        
         logoutBtn.addEventListener('click', handleLogout);
         
-        // WebSocket Event Handlers
+        function handleLogout() {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.close();
+            }
+            
+            window.location.reload();
+        }
+        
+        // WebSocket handlers
         socket.onopen = function(e) {
             console.log("WebSocket connection established");
         };
@@ -288,69 +1258,46 @@
                 case 'users_list':
                     updateUsersList(data.users);
                     break;
+                case 'typing':
+                    showTypingIndicator(data);
+                    break;
+                case 'notification':
+                    showNotification(data.message);
+                    break;
             }
         };
         
         socket.onclose = function(e) {
             console.log("WebSocket connection closed");
+            showNotification("اتصال قطع شد. لطفاً صفحه را refresh کنید.");
         };
         
         socket.onerror = function(e) {
             console.error("WebSocket error:", e);
+            showNotification("خطا در اتصال به سرور");
         };
-        
-        // Functions
-        function handleLogin() {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!username || !password) {
-                showAuthError('لطفاً نام کاربری و رمز عبور را وارد کنید');
-                return;
-            }
-            
-            socket.send(JSON.stringify({
-                action: 'login',
-                username: username,
-                password: password
-            }));
-        }
-        
-        function handleSignup() {
-            const username = document.getElementById('signupUsername').value;
-            const password = document.getElementById('signupPassword').value;
-            const confirm = document.getElementById('signupConfirm').value;
-            
-            if (!username || !password) {
-                showAuthError('لطفاً نام کاربری و رمز عبور را وارد کنید');
-                return;
-            }
-            
-            if (password !== confirm) {
-                showAuthError('رمز عبور و تکرار آن مطابقت ندارند');
-                return;
-            }
-            
-            socket.send(JSON.stringify({
-                action: 'signup',
-                username: username,
-                password: password
-            }));
-        }
         
         function handleAuthentication(data) {
             currentUser = data.username;
             currentUsernameEl.textContent = currentUser;
+            currentUserAvatar.textContent = currentUser.charAt(0).toUpperCase();
+            
+            // Set random color for avatar
+            const colors = ['#4361ee', '#3a0ca3', '#f72585', '#4cc9f0', '#4895ef', '#560bad'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            currentUserAvatar.style.backgroundColor = color;
             
             // Add previous messages
             data.messages.forEach(msg => {
                 addMessage(msg);
             });
             
-            // Hide modal and show chat interface
-            authModal.hide();
-            document.querySelector('.modal-backdrop').remove();
-            chatInterface.classList.remove('d-none');
+            // Hide auth modal and show app
+            authModal.classList.remove('active');
+            setTimeout(() => {
+                authModal.style.display = 'none';
+                appContainer.classList.remove('hidden');
+            }, 300);
             
             // Enable message input
             messageInput.disabled = false;
@@ -361,34 +1308,24 @@
             socket.send(JSON.stringify({
                 action: 'get_users'
             }));
-        }
-        
-        function showAuthError(message) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-danger mt-3';
-            alertDiv.textContent = message;
             
-            const activeTab = document.querySelector('.tab-pane.active');
-            const existingAlert = activeTab.querySelector('.alert');
-            
-            if (existingAlert) {
-                existingAlert.remove();
+            // Load theme preference
+            const savedTheme = localStorage.getItem('darkMode');
+            if (savedTheme === 'true') {
+                isDarkMode = true;
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>`;
             }
-            
-            activeTab.appendChild(alertDiv);
-        }
-        
-        function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message || !currentUser) return;
-            
-            socket.send(JSON.stringify({
-                action: 'message',
-                message: message
-            }));
-            
-            messageInput.value = '';
-            messageInput.focus();
         }
         
         function addMessage(data) {
@@ -396,34 +1333,50 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isCurrentUser ? 'sent' : 'received'}`;
             
+            // Format time
+            const now = new Date();
+            const messageDate = data.timestamp ? new Date(data.timestamp) : now;
+            let timeString = messageDate.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+            
+            // If message is from a different day, show date
+            if (messageDate.toDateString() !== now.toDateString()) {
+                timeString = messageDate.toLocaleDateString('fa-IR') + ' ' + timeString;
+            }
+            
             messageDiv.innerHTML = `
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-2">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <strong class="card-title">${data.user}</strong>
-                            <small class="text-muted">${data.time}</small>
-                        </div>
-                        <p class="card-text mb-0">${data.content}</p>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-user">${data.user}</span>
+                        <span class="message-time">${timeString}</span>
                     </div>
+                    <div class="message-text">${data.content}</div>
                 </div>
             `;
             
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Show notification if not current user and window not focused
+            if (!isCurrentUser && !document.hasFocus()) {
+                showNotification(`${data.user}: ${data.content}`);
+            }
         }
         
         function updateUserStatus(data) {
             if (data.online) {
-                // Add user to list
                 addUserToList(data.user);
             } else {
-                // Remove user from list
                 removeUserFromList(data.user);
             }
             
             // Update online count
             const userItems = usersList.querySelectorAll('.user-item');
             onlineCountEl.textContent = userItems.length;
+            
+            // Show notification for status change
+            if (data.user !== currentUser) {
+                showNotification(`${data.user} ${data.online ? 'آنلاین شد' : 'آفلاین شد'}`);
+            }
         }
         
         function updateUsersList(users) {
@@ -445,13 +1398,23 @@
                 return;
             }
             
-            const userItem = document.createElement('li');
-            userItem.className = 'list-group-item user-item d-flex align-items-center';
+            const userItem = document.createElement('div');
+            userItem.className = 'user-item';
             userItem.dataset.username = username;
             
+            // Set random color for avatar
+            const colors = ['#4361ee', '#3a0ca3', '#f72585', '#4cc9f0', '#4895ef', '#560bad'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
             userItem.innerHTML = `
-                <span class="online-badge me-2"></span>
-                <span class="flex-grow-1">${username}</span>
+                <div class="user-avatar" style="background-color: ${color}">${username.charAt(0).toUpperCase()}</div>
+                <div class="user-info">
+                    <div class="user-name">${username}</div>
+                    <div class="user-status">
+                        <span class="status-indicator online"></span>
+                        <span>آنلاین</span>
+                    </div>
+                </div>
             `;
             
             usersList.appendChild(userItem);
@@ -464,13 +1427,35 @@
             }
         }
         
-        function handleLogout() {
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.close();
-            }
+        function showTypingIndicator(data) {
+            if (data.user === currentUser) return;
             
-            window.location.reload();
+            if (data.typing) {
+                typingIndicator.classList.add('active');
+            } else {
+                typingIndicator.classList.remove('active');
+            }
         }
+        
+        function showNotification(message) {
+            notificationMessage.textContent = message;
+            notification.classList.add('show');
+            
+            clearTimeout(notificationTimeout);
+            notificationTimeout = setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+        
+        // Auto-focus auth input
+        loginUsername.focus();
+        
+        // Close notification when clicked outside
+        document.addEventListener('click', (e) => {
+            if (!notification.contains(e.target) && !e.target.closest('.header-btn')) {
+                notification.classList.remove('show');
+            }
+        });
     </script>
 </body>
 </html>
