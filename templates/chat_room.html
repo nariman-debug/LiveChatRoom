@@ -343,7 +343,7 @@
             currentUsernameEl.textContent = currentUser;
             
             // Add previous messages
-            data.messages.forEach(msg => {
+            data.messages.reverse().forEach(msg => {
                 addMessage(msg);
             });
             
@@ -403,10 +403,12 @@
                             <strong class="card-title">${data.user}</strong>
                             <small class="text-muted">${data.time}</small>
                         </div>
-                        <p class="card-text mb-0">${data.content}</p>
+                        <p class="card-text mb-0">${data.content ? data.content : data.message}</p>
                     </div>
                 </div>
             `;
+            
+            console.log(`content: ${data.content} | message: ${data.message} ---- if: ${data.content ? data.content : data.message}`)
             
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
